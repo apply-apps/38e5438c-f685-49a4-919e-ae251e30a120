@@ -1,103 +1,145 @@
 // Filename: index.js
 // Combined code from all files
-import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TextInput, Button, ScrollView, ActivityIndicator, View } from 'react-native';
+
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView, StyleSheet, View, Text, TextInput, Button, ActivityIndicator, ScrollView } from 'react-native';
 import axios from 'axios';
 
-export default function App() {
-    const [hero, setHero] = useState('');
-    const [villain, setVillain] = useState('');
+// StoryInput Component
+const StoryInput = ({ fetchStory }) => {
+    const [heroes, setHeroes] = useState('');
+    const [villains, setVillains] = useState('');
     const [plot, setPlot] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [story, setStory] = useState('');
+    
+    const handleFetchStory = () => {
+        fetchStory(heroes, villains, plot);
+    };
 
-    const fetchStory = async () => {
+    return (
+        <View style={styles.inputContainer}>
+            <TextInput
+                style={styles.input}
+                placeholder="Heroes"
+                value={heroes}
+                onChangeText={setHeroes}
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Villains"
+                value={villains}
+                onChangeText={setVillains}
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Plot"
+                value={plot}
+                onChangeText={setPlot}
+            />
+            <Button title="Create Story" onPress={handleFetchStory} />
+        </View>
+    );
+};
+
+// StoryDisplay Component
+const StoryDisplay = ({ story }) => {
+    const [displayedText, setDisplayedText] = useState('');
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        if (index < story.length) {
+            const timeoutId = setTimeout(() => {
+                setDisplayedText(displayedText + story[index]);
+                setIndex(index + 1);
+            }, 100);
+            return () => clearTimeout(timeoutId);
+        }
+    }, [displayedText, index, story]);
+
+    const resetStoryDisplay = () => {
+        setDisplayedText('');
+        setIndex(0);
+    };
+
+    return (
+        <ScrollView style={styles.storyContainer}>
+            <Text style={styles.text}>{displayedText}</Text>
+            <Button title="Reset" onPress={resetStoryDisplay} />
+        </ScrollView>
+    );
+};
+
+// App Component
+const API_URL = 'http://apihub.p.appply.xyz:3300/chatgpt';
+
+export default function App() {
+    const [story, setStory] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const fetchStory = async (heroes, villains, plot) => {
         setLoading(true);
-        const response = await axios.post('http://apihub.p.appply.xyz:3300/chatgpt', {
-            messages: [
-                { role: 'system', content: 'You are a helpful assistant. Please provide answers for given requests.' },
-                { role: 'user', content: `Create a fairy tale with the hero: ${hero}, the villain: ${villain}, and the plot: ${plot}.` }
-            ],
-            model: 'gpt-4o'
-        });
-        setStory(response.data.response);
-        setLoading(false);
+        try {
+            const response = await axios.post(API_URL, {
+                messages: [
+                    { role: "system", content: "You are a helpful assistant. Please create a fairy tale." },
+                    { role: "user", content: `Please create a fairy tale with these heroes: ${heroes}, these villains: ${villains}, and this plot: ${plot}` }
+                ],
+                model: "gpt-4o"
+            });
+
+            const { data } = response;
+            setStory(data.response);
+        } catch (error) {
+            console.error('Error fetching story:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <Text style={styles.title}>Fairy Tale Generator</Text>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Hero</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={hero}
-                        onChangeText={setHero}
-                        placeholder="Enter the hero"
-                    />
-                    <Text style={styles.label}>Villain</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={villain}
-                        onChangeText={setVillain}
-                        placeholder="Enter the villain"
-                    />
-                    <Text style={styles.label}>Plot</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={plot}
-                        onChangeText={setPlot}
-                        placeholder="Enter the plot"
-                    />
-                </View>
-                <Button title="Generate Story" onPress={fetchStory} />
+            <View style={styles.inputContainer}>
+                <StoryInput fetchStory={fetchStory} />
+            </View>
+            <View style={styles.storyContainer}>
                 {loading ? (
-                    <ActivityIndicator size="large" color="#0000ff" style={styles.loading} />
+                    <ActivityIndicator size="large" color="#00ff00" />
                 ) : (
-                    <Text style={styles.story}>{story}</Text>
+                    <StoryDisplay story={story} />
                 )}
-            </ScrollView>
+            </View>
         </SafeAreaView>
     );
 }
 
+// Shared Styles
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
-    },
-    scrollContainer: {
-        padding: 16,
-        paddingTop: 40,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        textAlign: 'center',
+        backgroundColor: '#F5FCFF',
+        paddingTop: 20,
     },
     inputContainer: {
-        marginBottom: 20,
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
     },
-    label: {
-        fontSize: 16,
-        marginBottom: 4,
+    storyContainer: {
+        flex: 2,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
     },
     input: {
         height: 40,
-        borderColor: '#ccc',
+        borderColor: 'gray',
         borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 8,
-        marginBottom: 12,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+        width: '100%',
     },
-    loading: {
-        marginTop: 20,
+    text: {
+        fontSize: 24,
+        lineHeight: 32,
     },
-    story: {
-        marginTop: 20,
-        fontSize: 16,
-        lineHeight: 24,
-    }
 });
