@@ -2,35 +2,36 @@
 // Combined code from all files
 
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StyleSheet, View, Text, TextInput, Button, ActivityIndicator, ScrollView } from 'react-native';
+import { SafeAreaView, StyleSheet, View, Text, TextInput, Button, ScrollView, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 
-// StoryInput Component
+const API_URL = 'http://apihub.p.appply.xyz:3300/chatgpt';
+
 const StoryInput = ({ fetchStory }) => {
     const [heroes, setHeroes] = useState('');
     const [villains, setVillains] = useState('');
     const [plot, setPlot] = useState('');
-    
+
     const handleFetchStory = () => {
         fetchStory(heroes, villains, plot);
     };
 
     return (
-        <View style={styles.inputContainer}>
+        <View style={inputStyles.container}>
             <TextInput
-                style={styles.input}
+                style={inputStyles.input}
                 placeholder="Heroes"
                 value={heroes}
                 onChangeText={setHeroes}
             />
             <TextInput
-                style={styles.input}
+                style={inputStyles.input}
                 placeholder="Villains"
                 value={villains}
                 onChangeText={setVillains}
             />
             <TextInput
-                style={styles.input}
+                style={inputStyles.input}
                 placeholder="Plot"
                 value={plot}
                 onChangeText={setPlot}
@@ -40,7 +41,19 @@ const StoryInput = ({ fetchStory }) => {
     );
 };
 
-// StoryDisplay Component
+const inputStyles = StyleSheet.create({
+    container: {
+        width: '100%',
+    },
+    input: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+    },
+});
+
 const StoryDisplay = ({ story }) => {
     const [displayedText, setDisplayedText] = useState('');
     const [index, setIndex] = useState(0);
@@ -61,15 +74,22 @@ const StoryDisplay = ({ story }) => {
     };
 
     return (
-        <ScrollView style={styles.storyContainer}>
-            <Text style={styles.text}>{displayedText}</Text>
+        <ScrollView style={displayStyles.container}>
+            <Text style={displayStyles.text}>{displayedText}</Text>
             <Button title="Reset" onPress={resetStoryDisplay} />
         </ScrollView>
     );
 };
 
-// App Component
-const API_URL = 'http://apihub.p.appply.xyz:3300/chatgpt';
+const displayStyles = StyleSheet.create({
+    container: {
+        width: '100%',
+    },
+    text: {
+        fontSize: 24,
+        lineHeight: 32,
+    },
+});
 
 export default function App() {
     const [story, setStory] = useState('');
@@ -96,11 +116,11 @@ export default function App() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.inputContainer}>
+        <SafeAreaView style={appStyles.container}>
+            <View style={appStyles.inputContainer}>
                 <StoryInput fetchStory={fetchStory} />
             </View>
-            <View style={styles.storyContainer}>
+            <View style={appStyles.storyContainer}>
                 {loading ? (
                     <ActivityIndicator size="large" color="#00ff00" />
                 ) : (
@@ -111,8 +131,7 @@ export default function App() {
     );
 }
 
-// Shared Styles
-const styles = StyleSheet.create({
+const appStyles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F5FCFF',
@@ -129,17 +148,5 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
-    },
-    input: {
-        height: 40,
-        borderColor: 'gray',
-        borderWidth: 1,
-        marginBottom: 10,
-        paddingHorizontal: 10,
-        width: '100%',
-    },
-    text: {
-        fontSize: 24,
-        lineHeight: 32,
-    },
+    }
 });
